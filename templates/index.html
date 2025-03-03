@@ -1,33 +1,97 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-
 <head>
-  <title>Hello Azure - Python Quickstart</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='bootstrap/css/bootstrap.min.css') }}">
-  <link rel="shortcut icon" href="{{ url_for('static', path='favicon.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
-<html>
-
 <body>
-  <main>
-    <div class="px-4 py-3 my-2 text-center">
-      <img class="d-block mx-auto mb-4" src="{{ url_for('static', path='images/azure-icon.svg') }}" alt="Azure Logo"
-        width="192" height="192" />
-      <h1 class="display-6 fw-bold text-primary">Welcome to Azure</h1>
-    </div>
-    <form method="post" action="{{ url_for('hello')}}">
-      <div class="col-md-6 mx-auto text-center">
-        <label for="name" class="form-label fw-bold fs-5">Could you please tell me your name?</label>
-        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center align-items-center my-1">
-          <input type="text" class="form-control" id="name" name="name" style="max-width: 256px;">
-        </div>
-        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center my-2">
-          <button type="submit" class="btn btn-primary btn-lg px-4 gap-3">Say Hello</button>
-        </div>
-      </div>
-    </form>
-  </main>
-</body>
 
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Login Required</h5>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <p id="errorMsg" class="text-danger mt-2" style="display:none;">Invalid credentials!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content -->
+<div class="container mt-5">
+    <h1>Welcome to the Azure Demo</h1>
+    <p>This is a sample FastAPI application.</p>
+
+    <button id="protectedBtn" class="btn btn-success">Go to Protected Page</button>
+    <button id="logoutBtn" class="btn btn-danger" style="display:none;">Logout</button>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
+
+        // Check if user is logged in (by checking cookies)
+        if (!document.cookie.includes("auth_token=valid_session")) {
+            loginModal.show();
+        } else {
+            document.getElementById("logoutBtn").style.display = "block";
+        }
+
+        // Handle login
+        document.getElementById("loginForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+
+            fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loginModal.hide();
+                    document.getElementById("logoutBtn").style.display = "block";
+                } else {
+                    document.getElementById("errorMsg").style.display = "block";
+                }
+            });
+        });
+
+        // Handle logout
+        document.getElementById("logoutBtn").addEventListener("click", function () {
+            fetch("/logout")
+                .then(() => {
+                    document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    location.reload();
+                });
+        });
+
+        // Handle protected page navigation
+        document.getElementById("protectedBtn").addEventListener("click", function () {
+            window.location.href = "/protected";
+        });
+    });
+</script>
+
+</body>
 </html>
