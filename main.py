@@ -2,9 +2,12 @@ from fastapi import FastAPI, Request, Form, Response, status, Depends, HTTPExcep
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 import uvicorn
 
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key="yes_its_secret")
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -14,26 +17,27 @@ VALID_PASSWORD = "password123"
 AUTH_COOKIE_NAME = "auth_token"
 
 def is_authenticated(request: Request):
-    """Check if the user has a valid authentication cookie."""
-    return request.cookies.get(AUTH_COOKIE_NAME) == "valid_session"
+    if "user" in request.session:
+        return request.session["user"] == VALID_USERNAME
+    return False
 
 @app.post("/login")
-async def login(data: dict, response: Response):
-    """Handles login and sets an authentication cookie."""
+async def login(data: dict, request: Request, response: Response):
+    """Handles login and sets the auth."""
     username = data.get("username")
     password = data.get("password")
 
     if username == VALID_USERNAME and password == VALID_PASSWORD:
-        response.set_cookie(key=AUTH_COOKIE_NAME, value="valid_session", httponly=True)
+        request.session["user"] = username
         return JSONResponse(content={"success": True})
     
     return JSONResponse(content={"success": False}, status_code=401)
 
 @app.get("/logout")
-async def logout(response: Response):
-    """Clears the authentication cookie and redirects to home."""
+async def logout(request: Request, response: Response):
+    """Clears the authentication and redirects to home."""
     response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
-    response.delete_cookie(AUTH_COOKIE_NAME)
+    request.session["user"] = None
     return response
 
 @app.get("/", response_class=HTMLResponse)
