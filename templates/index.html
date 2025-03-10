@@ -39,15 +39,19 @@
     <h1>Welcome to the Azure Demo</h1>
     <p>This is a sample FastAPI application.</p>
 
-    <button id="protectedBtn" class="btn btn-success">Go to Protected Page</button>
-    <button id="logoutBtn" class="btn btn-danger" style="display:none;">Logout</button>
+    <button id="protectedBtn" onclick="window.location.href='/protected'" class="btn btn-success">Go to Protected Page</button>
+    <button id="logoutBtn" class="btn btn-danger" onclick="window.location.href='/logout'" style="display:none;">Logout</button>
 </div>
 
+{% if already %}
+<script>
+    document.getElementById("logoutBtn").style.display = "block";
+</script>
+{% else %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
-
-        // Check if user is logged in (by checking cookies)
+        // Check if user is logged in
         if (!document.cookie.includes("auth_token=valid_session")) {
             loginModal.show();
         } else {
@@ -92,6 +96,7 @@
         });
     });
 </script>
+{% endif %}
 
 </body>
 </html>
