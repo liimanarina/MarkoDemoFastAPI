@@ -17,7 +17,6 @@ templates = Jinja2Templates(directory="templates")
 # Dummy credentials (replace with a real authentication system)
 VALID_USERNAME = "admin"
 VALID_PASSWORD = "password123"
-AUTH_COOKIE_NAME = "auth_token"
 
 def is_authenticated(request: Request):
     if "user" in request.session:
@@ -39,14 +38,18 @@ async def login(data: dict, request: Request, response: Response):
 @app.get("/logout")
 async def logout(request: Request, response: Response):
     """Clears the authentication and redirects to home."""
-    response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    print("Logout")
     request.session["user"] = None
+    response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
     return response
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Public route: Home page"""
-    return templates.TemplateResponse('index.html', {"request": request})
+    already = is_authenticated(request)
+    files = [f for f in os.listdir("static") if os.path.isfile(os.path.join("static", f)) and f != "favicon.ico"]
+    print(already)
+    return templates.TemplateResponse('index.html', {"request": request, "already": already, "files": files})
 
 @app.get("/protected", response_class=HTMLResponse)
 async def protected_page(request: Request):
@@ -68,7 +71,8 @@ async def upload_file(file: UploadFile = File(...)):
 @app.get("/files")
 async def list_files(request: Request):
     """Lists the files in the static directory."""
-    files = os.listdir("static")
+    print("Call files")
+    files = [f for f in os.listdir("static") if os.path.isfile(os.path.join("static", f)) and f != "favicon.ico"]
     return templates.TemplateResponse('index.html', {"request": request, "files": files})
 
 if __name__ == '__main__':
