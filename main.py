@@ -7,6 +7,8 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 import uvicorn
 import os
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="yes_its_secret")
@@ -14,9 +16,15 @@ app.add_middleware(SessionMiddleware, secret_key="yes_its_secret")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Dummy credentials (replace with a real authentication system)
-VALID_USERNAME = "admin"
-VALID_PASSWORD = "password123"
+# Retrieve secrets from Azure Key Vault
+
+key_vault_uri = "https://Marko-Student-Keyvault.vault.azure.net"
+credential = DefaultAzureCredential()
+client = SecretClient(vault_url=key_vault_uri, credential=credential)
+
+VALID_USERNAME = client.get_secret("VALIDUSERNAME").value
+VALID_PASSWORD = client.get_secret("VALIDPASSWORD").value
+print(VALID_USERNAME, VALID_PASSWORD)
 
 def is_authenticated(request: Request):
     if "user" in request.session:
