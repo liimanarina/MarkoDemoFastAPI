@@ -18,14 +18,12 @@ templates = Jinja2Templates(directory="templates")
 
 # Retrieve secrets from Azure Key Vault
 
-#key_vault_uri = "https://Marko-Student-Keyvault.vault.azure.net"
-#credential = DefaultAzureCredential()
-#client = SecretClient(vault_url=key_vault_uri, credential=credential)
+key_vault_uri = "https://Marko-Student-Keyvault.vault.azure.net"
+credential = DefaultAzureCredential()
+client = SecretClient(vault_url=key_vault_uri, credential=credential)
 
-#VALID_USERNAME = client.get_secret("VALIDUSERNAME").value
-#VALID_PASSWORD = client.get_secret("VALIDPASSWORD").value
-VALID_USERNAME = "admin"
-VALID_PASSWORD = "password123"
+VALID_USERNAME = client.get_secret("VALIDUSERNAME").value
+VALID_PASSWORD = client.get_secret("VALIDPASSWORD").value
 
 #print(VALID_USERNAME, VALID_PASSWORD)
 
